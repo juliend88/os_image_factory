@@ -15,11 +15,6 @@ parameters:
     label: SSH Keypair
     type: string
 
-  domain:
-    description: Domain name
-    type: string
-
-
   flavor_name:
     default: s1.cw.small-1
     description: Flavor to use for the deployed instance

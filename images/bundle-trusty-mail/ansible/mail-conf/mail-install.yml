@@ -7,8 +7,7 @@
    - hosts: local
      user: cloud
      become: true
-     vars:
-     domain: "{{ mail_domain }}"
+
   tasks:
     - name: desired locale are present
       locale_gen: name="{{ item }}" state=present
@@ -52,7 +51,7 @@
  #       dest=/root/letsencrypt
 
     - name: create self-signed SSL cert
-      shell: openssl req -new -nodes -x509 -subj "/C=FR/ST=ILE DE FRANCE/L=PARIS/O=CLOUDWATT/CN={{ domain }}" -days 3650 -keyout /root/server.key -out /root/server.crt -extensions v3_ca creates=/root/server.crt
+      shell: openssl req -new -nodes -x509 -subj "/C=FR/ST=ILE DE FRANCE/L=PARIS/O=CLOUDWATT/CN={{  mail_domain }}" -days 3650 -keyout /root/server.key -out /root/server.crt -extensions v3_ca creates=/root/server.crt
     #- name: Generate let's encrypt certificate
     #  shell: |
     #  sudo /root/letsencrypt/letsencrypt-auto certonly --standalone --agree-tos --email vagrant@vagrant.fr -d vagrant.fr >/dev/null 2>&1
@@ -80,7 +79,7 @@
       with_items:
 
         - { name: 'postfix', question: 'postfix/main_mailer_type', vtype: 'string', value: "Internet Site"}
-        - { name: 'postfix', question: 'postfix/mailname', vtype: 'string', value: "{{ domain }}"}
+        - { name: 'postfix', question: 'postfix/mailname', vtype: 'string', value: "{{  mail_domain }}"}
 
     - name: clamAv configuration
       copy:
@@ -148,7 +147,7 @@
       lineinfile:
         name=/etc/roundcube/main.inc.php
         regexp="^$rcmail_config['default_host'] = '';"
-        line="$rcmail_config['default_host'] = '{{ domain }}';"
+        line="$rcmail_config['default_host'] = '{{  mail_domain }}';"
       notify: restart apache
 
 
