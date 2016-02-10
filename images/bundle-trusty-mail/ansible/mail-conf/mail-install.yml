@@ -1,12 +1,12 @@
-
+---
 #
 ##
 ### Written by the CAT (Cloudwatt Automation Team)
 ##
 
-   - hosts: local
-     user: cloud
-     become: true
+- hosts: local
+  user: cloud
+  become: true
 
   tasks:
     - name: desired locale are present
@@ -14,6 +14,7 @@
       with_items:
         - fr_FR.UTF-8
         - en_US.UTF-8
+
     - name: apt-get update & upgrade
       apt:
         upgrade=full
@@ -26,9 +27,10 @@
         state=present
       with_items:
         - postfix
-        - dovecot-common
+        - dovecot-core
         - dovecot-imapd
         - dovecot-pop3d
+        - mailutils
         - clamav
         - clamav-daemon
         - clamsmtp
@@ -44,112 +46,72 @@
         - roundcube-plugins-extra
         - git
 
+    - name: include variables
+      include_vars: /etc/ansible/mail-vars.yml
 
- #   - name: Let's encrypt install
- #    git:
- #       repo=https://github.com/letsencrypt/letsencrypt
- #       dest=/root/letsencrypt
 
-    - name: create self-signed SSL cert
+    - name: create self-signed SSL cert- name
       shell: openssl req -new -nodes -x509 -subj "/C=FR/ST=ILE DE FRANCE/L=PARIS/O=CLOUDWATT/CN={{  mail_domain }}" -days 3650 -keyout /root/server.key -out /root/server.crt -extensions v3_ca creates=/root/server.crt
-    #- name: Generate let's encrypt certificate
-    #  shell: |
-    #  sudo /root/letsencrypt/letsencrypt-auto certonly --standalone --agree-tos --email vagrant@vagrant.fr -d vagrant.fr >/dev/null 2>&1
 
-  #  - name: Add key in postfix
-  #   shell: |
-  #     sudo /usr/sbin/postconf -e 'smtpd_tls_key_file = /etc/letsencrypt/keys/0000_key-letsencrypt.pem'
+    - name: configuration main postfix
+      template: src=main.cf.j2 dest=/etc/postfix/main.cf
 
 
-    - name: main postfix configuration
-      copy:
-       src=main.cf
-        dest=/etc/postfix/main.cf
-        owner=root
-        group=root
-        mode=0644
-      notify: restart postfix
-
-    - name: deconf postfix
-      debconf:
-        name="{{ item.name }}"
-        question="{{ item.question }}"
-        value="{{ item.value }}"
-        vtype="{{ item.vtype }}"
-      with_items:
-
-        - { name: 'postfix', question: 'postfix/main_mailer_type', vtype: 'string', value: "Internet Site"}
-        - { name: 'postfix', question: 'postfix/mailname', vtype: 'string', value: "{{  mail_domain }}"}
-
-    - name: clamAv configuration
-      copy:
-        src=clamsmtpd.conf
-        dest=/etc/clamsmtpd.conf
-        owner=root
-        group=root
-        mode=0644
-      notify: restart clamav-daemon
-
-    - cron: name="update ClamAV" minute="00" hour="1" job="/usr/bin/freshclam --quiet"
-
-    - name: master postfix configuration and clamAv
+    - name: configuration master postfix
       copy:
        src=master.cf
         dest=/etc/postfix/master.cf
         owner=root
         group=root
         mode=0644
-      notify: restart postfix
 
-    - name: auth dovecot
-      lineinfile:
-        name=/etc/dovecot/conf.d/10-auth.conf
-        regexp="^auth_mechanisms \= plain"
-        line="auth_mechanisms = plain login"
-      notify: restart dovecot
-
-    - name: email inbox
-      lineinfile:
-        name=/etc/dovecot/conf.d/10-mail.conf
-        regexp="^mail_location \= mbox:~/mail:INBOX\=/var/mail/%u"
-        line="mail_location = maildir:~/Maildir"
-      notify: restart dovecot
-
-    - name: pop3
-      lineinfile:
-        name=/etc/dovecot/conf.d/20-pop3.conf
-        regexp="^#pop 3_uidl_format \= %08Xu%08Xv"
-        line="pop3_uidl_format = %08Xu%08Xv"
-      notify: restart dovecot
+    - cron: name="update ClamAV" minute="00" hour="1" job="/usr/bin/freshclam --quiet"
 
 
-    - name: roundcube Alias 1
-      lineinfile:
-        name=/etc/roundcube/apache.conf
-        regexp="^#Alias /roundcube/program/js/tiny_mce/ /usr/share/tinymce/www/"
-        line="Alias /roundcube/program/js/tiny_mce/ /usr/share/tinymce/www/"
-      notify: restart apache
+    - name: dovecot configuration
+      replace:
+        dest="{{ item.dest }}"
+        regexp="{{ item.regexp }}"
+        replace="{{ item.replace }}"
+      with_items:
+        - { dest: '/etc/dovecot/dovecot.conf', regexp: '^#listen = *, ::', replace: 'listen = *, ::'}
+        - { dest: '/etc/dovecot/conf.d/10-mail.conf', regexp: '^mail_location \= mbox:~/mail:INBOX\=/var/mail/%u', replace: 'mail_location = maildir:~/Maildir'}
+        - { dest: '/etc/dovecot/conf.d/10-auth.conf', regexp: '^#disable_plaintext_auth = yes', replace: 'disable_plaintext_auth = no'}
+        - { dest: '/etc/dovecot/conf.d/10-auth.conf', regexp: '^auth_mechanisms = plain$', replace: 'auth_mechanisms = plain login'}
+        - { dest: '/etc/dovecot/conf.d/10-ssl.conf', regexp: '^#ssl = yes', replace: 'ssl = no'}
+        - { dest: '/etc/dovecot/conf.d/10-ssl.conf', regexp: '^ssl_cert = </etc/dovecot/dovecot.pem$', replace: '#ssl_cert = </etc/dovecot/dovecot.pem'}
+        - { dest: '/etc/dovecot/conf.d/10-ssl.conf', regexp: '^ssl_key = </etc/dovecot/private/dovecot.pem$', replace: '#ssl_key = </etc/dovecot/private/dovecot.pem'}
+        - { dest: '/etc/dovecot/conf.d/20-pop3.conf', regexp: '^#pop_3_uidl_format \= %08Xu%08Xv', replace: 'pop3_uidl_format = %08Xu%08Xv'}
 
-    - name: roundcube Alias 2
-      lineinfile:
-        name=/etc/roundcube/apache.conf
-        regexp="^#Alias /roundcube /var/lib/roundcube"
-        line="Alias /roundcube /var/lib/roundcube"
-      notify: php5enmod mcrypt
 
+    - name: master dovecot configuration
+      copy:
+       src=10-master.conf
+        dest=/etc/dovecot/conf.d/10-master.conf
+        owner=root
+        group=root
+        mode=0644
 
+    - name: roundcube configuration
+      replace:
+        dest="{{ item.dest }}"
+        regexp="{{ item.regexp }}"
+        replace="{{ item.replace }}"
+      with_items:
+        - { dest: '/etc/roundcube/apache.conf', regexp: '^#    Alias /roundcube/program/js/tiny_mce/ /usr/share/tinymce/www/', replace: 'Alias /roundcube/program/js/tiny_mce/ /usr/share/tinymce/www/'}
+        - { dest: '/etc/roundcube/apache.conf', regexp: '^#    Alias /roundcube /var/lib/roundcube', replace: 'Alias /roundcube /var/lib/roundcube'}
+     
 
-    - name: add virtualhost & ssl for roundcube
-       template: src=vhost.conf.j2 dest=/etc/apache2/sites-available/vhost.conf
-       notify: enable roundcube site
-
-    - name: roundcube Alias 1
+    - name: roundcube add domaine
       lineinfile:
         name=/etc/roundcube/main.inc.php
         regexp="^$rcmail_config['default_host'] = '';"
         line="$rcmail_config['default_host'] = '{{  mail_domain }}';"
-      notify: restart apache
+            
 
+    - name: add virtualhost & ssl for roundcube
+      template: src=vhost.conf.j2 dest=/etc/apache2/sites-available/vhost.conf
+      
 
 
   handlers:
@@ -159,16 +121,10 @@
       service: name=dovecot state=restarted
     - name: restart clamav-daemon
       service: name=clamav-daemon state=restarted
-    - name: restart apache
-      service: name=apache2 state=restarted
-    - name: php5enmod mcrypt
-      shell: php5enmod mcrypt
-      notify: restart apache
+    - name: restart clamsmtp
+      service: name=clamsmtp state=restarted
     - name: enable roundcube site
-      shell: /usr/sbin/a2enmod ssl && /usr/sbin/a2enmod rewrite && /usr/sbin/a2dissite 000-default default-ssl.conf && a2ensite vhost.conf
-      notify: restart apache
-
-
-
-
+      shell: /usr/sbin/a2enmod ssl && /usr/sbin/a2enmod rewrite && /usr/sbin/a2dissite 000-default default-ssl.conf && /usr/sbin/a2ensite vhost.conf && /usr/sbin/php5enmod mcrypt
+    - name: restart apache
+      service: name=apache2 state=restarted 
 

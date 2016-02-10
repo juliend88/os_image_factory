@@ -89,6 +89,7 @@ resources:
             echo -e "---\nmail_domain: 'ip-$(echo $floating_ip$ | tr "." "-").rev.cloudwatt.com'" > /etc/ansible/mail-vars.yml
             echo "[local]" >> /etc/ansible/hosts
             echo "127.0.0.1 ansible_connection=local" >> /etc/ansible/hosts
+            echo "127.0.0.1  ip-$(echo $floating_ip$ | tr "." "-").rev.cloudwatt.com" >>/etc/hosts
             ansible-playbook /root/mail-install/mail-install.yml
 
           params:

@@ -24,13 +24,13 @@
         src="{{ item.src }}"
         dest="{{ item.dest }}"
         owner="{{ item.owner }}"
-        group="{{ item.group }}"
         mode="{{ item.mode }}"
-       with_items:
+      with_items:
 
         - { src: 'mail-conf/mail-install.yml', dest: '/root/mail-install/mail-install.yml', owner: 'root', mode: "600"}
         - { src: 'mail-conf/master.cf', dest: '/root/mail-install/master.cf', owner: 'root', mode: "600"}
-        - { src: 'mail-conf/main.cf', dest: '/root/mail-install/main.cf', owner: 'root', mode: "600"}
+        - { src: 'mail-conf/main.cf.j2', dest: '/root/mail-install/main.cf.j2', owner: 'root', mode: "600"}
         - { src: 'mail-conf/vhost.conf.j2', dest: '/root/mail-install/vhost.conf.j2', owner: 'root', mode: "600"}
-        - { src: 'mail-conf/clamsmtpd.conf', dest: '/root/mail-install/clamstpd.conf', owner: 'root', mode: "600"}
+        - { src: 'mail-conf/10-master.conf', dest: '/root/mail-install/10-master.conf', owner: 'root', mode: "600"}
+
 

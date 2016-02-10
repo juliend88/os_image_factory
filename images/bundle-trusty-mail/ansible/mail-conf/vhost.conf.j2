@@ -10,7 +10,7 @@ RewriteRule     ^(.*)$ https://{{ mail_domain }}/roundcube$1 [L,R]
 <IfModule mod_ssl.c>
 <VirtualHost *:443>
         ServerAdmin root@{{ mail_domain }}
-        Servername {{ domain }}
+        Servername {{ mail_domain }}
         DocumentRoot /var/lib/roundcube
 SSLEngine on
 SSLCertificateFile /root/server.crt
