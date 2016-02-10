@@ -82,15 +82,25 @@
         - { dest: '/etc/dovecot/conf.d/10-ssl.conf', regexp: '^ssl_cert = </etc/dovecot/dovecot.pem$', replace: '#ssl_cert = </etc/dovecot/dovecot.pem'}
         - { dest: '/etc/dovecot/conf.d/10-ssl.conf', regexp: '^ssl_key = </etc/dovecot/private/dovecot.pem$', replace: '#ssl_key = </etc/dovecot/private/dovecot.pem'}
         - { dest: '/etc/dovecot/conf.d/20-pop3.conf', regexp: '^#pop_3_uidl_format \= %08Xu%08Xv', replace: 'pop3_uidl_format = %08Xu%08Xv'}
+   
 
 
     - name: master dovecot configuration
       copy:
-       src=10-master.conf
+        src=10-master.conf
         dest=/etc/dovecot/conf.d/10-master.conf
         owner=root
         group=root
         mode=0644
+      notify: restart postfix
+
+
+    - name: stop dovecot
+      shell: initctl stop dovecot
+
+    - name: start dovecot
+      shell: initctl start dovecot
+
 
     - name: roundcube configuration
       replace:
@@ -107,24 +117,28 @@
         name=/etc/roundcube/main.inc.php
         regexp="^$rcmail_config['default_host'] = '';"
         line="$rcmail_config['default_host'] = '{{  mail_domain }}';"
-            
+      notify: php5enmod mcrypt
 
-    - name: add virtualhost & ssl for roundcube
-      template: src=vhost.conf.j2 dest=/etc/apache2/sites-available/vhost.conf
       
 
+    - name: add virtualhost 
+      template: src=vhost.conf.j2 dest=/etc/apache2/sites-available/vhost.conf
 
+    - name: php5enmod mcrypt
+      shell: php5enmod mcrypt
+      notify: enable roundcube
   handlers:
     - name: restart postfix
       service: name=postfix state=restarted
-    - name: restart dovecot
-      service: name=dovecot state=restarted
+      notify: restart clamsmtp
     - name: restart clamav-daemon
       service: name=clamav-daemon state=restarted
     - name: restart clamsmtp
       service: name=clamsmtp state=restarted
-    - name: enable roundcube site
-      shell: /usr/sbin/a2enmod ssl && /usr/sbin/a2enmod rewrite && /usr/sbin/a2dissite 000-default default-ssl.conf && /usr/sbin/a2ensite vhost.conf && /usr/sbin/php5enmod mcrypt
+      notify: restart clamav-daemon
+    - name: enable roundcube 
+      shell: /usr/sbin/a2enmod ssl && /usr/sbin/a2enmod rewrite && /usr/sbin/a2dissite 000-default default-ssl.conf && /usr/sbin/a2ensite vhost.conf 
+      notify: restart apache
     - name: restart apache
       service: name=apache2 state=restarted 
 
