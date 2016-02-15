@@ -44,13 +44,46 @@
         - roundcube
         - roundcube-plugins
         - roundcube-plugins-extra
+        - git
 
     - name: include variables
       include_vars: /etc/ansible/mail-vars.yml
 
+    - name: stop apache
+      service: name=apache2 state=stopped
 
-    - name: create self-signed SSL cert- name
-      shell: openssl req -new -nodes -x509 -subj "/C=FR/ST=ILE DE FRANCE/L=PARIS/O=CLOUDWATT/CN={{  mail_domain }}" -days 3650 -keyout /root/server.key -out /root/server.crt -extensions v3_ca creates=/root/server.crt
+    - name: Let's encrypt download
+      git:
+        repo=https://github.com/letsencrypt/letsencrypt
+        dest=/root/letsencrypt
+
+
+
+    - name: Generate let's encrypt certificate
+      shell: |
+          cd /root/letsencrypt/
+          ./letsencrypt-auto-source/letsencrypt-auto --os-packages-only
+          ./tools/venv.sh
+           source ./venv/bin/activate
+           letsencrypt certonly --standalone --agree-tos --email root@{{ mail_domain }} -d {{ mail_domain }} --standalone-supported-challenges tls-sni-01
+
+    - name: Copy crt to cozy
+      file:
+        src={{ item.src }}
+        dest={{ item.dest }}
+        state=link
+      with_items:
+        - {src: "/etc/letsencrypt/live/{{ mail_domain }}/privkey.pem", dest: "/root/server.key" }
+        - {src: "/etc/letsencrypt/live/{{ mail_domain }}/fullchain.pem", dest: "/root/server.crt" }
+
+
+    - name: Cron renew crt
+      cron:
+        name="renew crt"
+        special_time=monthly
+        job="/root/renew_cert.sh"
+
+
 
     - name: configuration main postfix
       template: src=main.cf.j2 dest=/etc/postfix/main.cf
@@ -64,7 +97,12 @@
         group=root
         mode=0644
 
-    - cron: name="update ClamAV" minute="00" hour="1" job="/usr/bin/freshclam --quiet"
+    -name: Cron upate ClamAV
+     cron:
+        name="update ClamAV"
+        minute="00"
+        hour="1"
+        job="/usr/bin/freshclam --quiet"
 
 
     - name: dovecot configuration
@@ -81,7 +119,7 @@
         - { dest: '/etc/dovecot/conf.d/10-ssl.conf', regexp: '^ssl_cert = </etc/dovecot/dovecot.pem$', replace: '#ssl_cert = </etc/dovecot/dovecot.pem'}
         - { dest: '/etc/dovecot/conf.d/10-ssl.conf', regexp: '^ssl_key = </etc/dovecot/private/dovecot.pem$', replace: '#ssl_key = </etc/dovecot/private/dovecot.pem'}
         - { dest: '/etc/dovecot/conf.d/20-pop3.conf', regexp: '^#pop_3_uidl_format \= %08Xu%08Xv', replace: 'pop3_uidl_format = %08Xu%08Xv'}
-   
+
 
 
     - name: master dovecot configuration
@@ -109,21 +147,23 @@
       with_items:
         - { dest: '/etc/roundcube/apache.conf', regexp: '^#    Alias /roundcube/program/js/tiny_mce/ /usr/share/tinymce/www/', replace: 'Alias /roundcube/program/js/tiny_mce/ /usr/share/tinymce/www/'}
         - { dest: '/etc/roundcube/apache.conf', regexp: '^#    Alias /roundcube /var/lib/roundcube', replace: 'Alias /roundcube /var/lib/roundcube'}
-     
+
 
     - name: roundcube add domaine
       lineinfile:
         name=/etc/roundcube/main.inc.php
         regexp="^$rcmail_config['default_host'] = '';"
         line="$rcmail_config['default_host'] = '{{  mail_domain }}';"
+      notify: php5enmod mcrypt
 
-    - name: add virtualhost 
+
+
+    - name: add virtualhost
       template: src=vhost.conf.j2 dest=/etc/apache2/sites-available/vhost.conf
 
     - name: php5enmod mcrypt
       shell: php5enmod mcrypt
       notify: enable roundcube
-
   handlers:
     - name: restart postfix
       service: name=postfix state=restarted
@@ -133,9 +173,9 @@
     - name: restart clamsmtp
       service: name=clamsmtp state=restarted
       notify: restart clamav-daemon
-    - name: enable roundcube 
-      shell: /usr/sbin/a2enmod ssl && /usr/sbin/a2enmod rewrite && /usr/sbin/a2dissite 000-default default-ssl.conf && /usr/sbin/a2ensite vhost.conf 
+    - name: enable roundcube
+      shell: /usr/sbin/a2enmod ssl && /usr/sbin/a2enmod rewrite && /usr/sbin/a2dissite 000-default default-ssl.conf && /usr/sbin/a2ensite vhost.conf
       notify: restart apache
     - name: restart apache
-      service: name=apache2 state=restarted 
+      service: name=apache2 state=restarted
 

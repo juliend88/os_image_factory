@@ -32,5 +32,9 @@
         - { src: 'mail-conf/main.cf.j2', dest: '/root/mail-install/main.cf.j2', owner: 'root', mode: "600"}
         - { src: 'mail-conf/vhost.conf.j2', dest: '/root/mail-install/vhost.conf.j2', owner: 'root', mode: "600"}
         - { src: 'mail-conf/10-master.conf', dest: '/root/mail-install/10-master.conf', owner: 'root', mode: "600"}
+        - { src: 'mail-conf/renew_cert.sh', dest: '/root/renew_cert.sh', owner: 'root', mode: "700"}
+
+
+
 
 
