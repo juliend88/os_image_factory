@@ -44,7 +44,6 @@
         - roundcube
         - roundcube-plugins
         - roundcube-plugins-extra
-        - git
 
     - name: include variables
       include_vars: /etc/ansible/mail-vars.yml
@@ -117,9 +116,6 @@
         name=/etc/roundcube/main.inc.php
         regexp="^$rcmail_config['default_host'] = '';"
         line="$rcmail_config['default_host'] = '{{  mail_domain }}';"
-      notify: php5enmod mcrypt
-
-      
 
     - name: add virtualhost 
       template: src=vhost.conf.j2 dest=/etc/apache2/sites-available/vhost.conf
@@ -127,6 +123,7 @@
     - name: php5enmod mcrypt
       shell: php5enmod mcrypt
       notify: enable roundcube
+
   handlers:
     - name: restart postfix
       service: name=postfix state=restarted
