@@ -97,8 +97,8 @@
         group=root
         mode=0644
 
-    -name: Cron upate ClamAV
-     cron:
+    - name: Cron upate ClamAV
+      cron:
         name="update ClamAV"
         minute="00"
         hour="1"
