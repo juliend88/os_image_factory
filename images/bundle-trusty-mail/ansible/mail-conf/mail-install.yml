@@ -64,11 +64,11 @@
       service: name=apache2 state=stopped
 
 
-    - name: Install virtualenv (Debian)
+    - name: Install virtualenv (Ubuntu)
       apt: name={{ item }} state=present
       with_items:
         - virtualenv
-      when: ansible_distribution == 'Debian'
+      when: ansible_distribution == 'Ubuntu'
 
     - name: Install python depends
       pip: virtualenv="/usr/local/share/letsencrypt/env" virtualenv_site_packages=no name={{ item }} state=latest
