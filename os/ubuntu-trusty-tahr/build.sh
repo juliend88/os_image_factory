@@ -61,7 +61,7 @@ cd ..
 BUILD_SUCCESS="$?"
 
 echo "======= Deleting temporary image..."
-glance image-delete $TMP_IMG_ID
+glance --insecure image-delete $TMP_IMG_ID
 
 if [ ! "$BUILD_SUCCESS" ]; then
   echo "Build failed! Check packer log for details."
@@ -69,7 +69,7 @@ if [ ! "$BUILD_SUCCESS" ]; then
   exit 1
 fi
 
-IMG_ID="$(openstack image list --private | grep $IMG_NAME | tr "|" " " | tr -s " " | cut -d " " -f2)"
+IMG_ID="$(openstack --insecure image list --private | grep $IMG_NAME | tr "|" " " | tr -s " " | cut -d " " -f2)"
 
 echo "IMG_ID for image '$IMG_NAME': $IMG_ID"
 
@@ -92,7 +92,7 @@ popd
 # FIXME: Actually delete images
 # echo "======= Deleting deprecated images"
 echo "======= Listing deprecated images"
-openstack image list | grep -E "$BASENAME-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{4}" | tr "|" " " | tr -s " " | cut -d " " -f 3 | sort -r | awk 'NR>5' # | xargs -r openstack image delete
+openstack --insecure image list | grep -E "$BASENAME-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{4}" | tr "|" " " | tr -s " " | cut -d " " -f 3 | sort -r | awk 'NR>5' # | xargs -r openstack image delete
 
 glance  --insecure  image-show $IMG_ID
 
