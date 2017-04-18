@@ -15,7 +15,7 @@ if [ -f "$IMG" ]; then
     rm $IMG
 fi
 
-wget -q $IMG_URL
+wget $IMG_URL
 
 if [ ! -d "$TMP_DIR" ]; then
     mkdir $TMP_DIR
@@ -40,7 +40,7 @@ sed -i "s/#GRUB_DISABLE_LINUX_UUID/GRUB_DISABLE_LINUX_UUID/" $TMP_DIR/etc/defaul
 
 guestunmount $TMP_DIR
 
-glance image-create \
+glance --insecure image-create \
        --file $IMG \
        --disk-format qcow2 \
        --container-format bare \
@@ -94,7 +94,7 @@ popd
 echo "======= Listing deprecated images"
 openstack image list | grep -E "$BASENAME-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{4}" | tr "|" " " | tr -s " " | cut -d " " -f 3 | sort -r | awk 'NR>5' # | xargs -r openstack image delete
 
-glance image-show $IMG_ID
+glance  --insecure  image-show $IMG_ID
 
 #if [ "$?" = "0" ]; then
 #  echo "======= Validation testing..."
