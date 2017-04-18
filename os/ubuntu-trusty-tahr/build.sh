@@ -15,7 +15,7 @@ if [ -f "$IMG" ]; then
     rm $IMG
 fi
 
-wget $IMG_URL
+wget -q $IMG_URL
 
 if [ ! -d "$TMP_DIR" ]; then
     mkdir $TMP_DIR
