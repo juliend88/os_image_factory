@@ -11,8 +11,8 @@
       name: NAME_ME
       img_base: IMG_BASE
 
-    final_glance_options: "--min-disk 20"
-    vm_flavor: "16"
+    final_glance_options: "--min-disk 40"
+    vm_flavor: "t2.micro"
     bundle_target_name: "{{ bundle.name }}-{{ ansible_date_time.date }}{{ ansible_date_time.hour }}{{ ansible_date_time.minute }}"
     packer_file: "build.packer.json"
     bundle_path: "{{ bundle.path|default(bundle.name) }}"
