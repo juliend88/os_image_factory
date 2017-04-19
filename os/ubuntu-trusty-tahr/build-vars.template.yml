@@ -3,7 +3,7 @@ bundle_target_name: B_TARGET_NAME
 packer_file: "build.packer.json"
 bundle:
   name: ubuntu-14.04
-  img_base: TMP_IMAGE_ID
+  img_base: d9bd237a-c298-47a7-aca8-3664e3debb44
   path: ubuntu-trusty-tahr
   properties:
     cw_os: Ubuntu
