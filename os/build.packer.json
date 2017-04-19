@@ -3,9 +3,10 @@
         "source_image": "unknown",
         "image_name": "unknown",
         "build_flavor": "43",
-        "factory_network": "{{ env `FACTORY_NETWORK_ID` }}",
-        "factory_security_group_name": "{{ env `FACTORY_SECURITY_GROUP_NAME` }}",
-        "bundle_path": "unknown"
+        "factory_network": "7dfb581a-de51-41f5-9dc1-193aab64303a",
+        "factory_security_group_name": "71c89962-34a1-45e1-b985-c481a0dfa23e",
+        "bundle_path": "unknown",
+        "insecure": true
     },
     "builders": [
         {
