@@ -5,8 +5,7 @@
         "build_flavor": "43",
         "factory_network": "7dfb581a-de51-41f5-9dc1-193aab64303a",
         "factory_security_group_name": "71c89962-34a1-45e1-b985-c481a0dfa23e",
-        "bundle_path": "unknown",
-        "insecure": true
+        "bundle_path": "unknown"
     },
     "builders": [
         {
@@ -19,7 +18,8 @@
             "networks": "{{ user `factory_network` }}",
             "communicator": "ssh",
             "ssh_pty": true,
-            "ssh_timeout": "10m"
+            "ssh_timeout": "10m",
+            "insecure": true
         }
     ],
     "provisioners": [
