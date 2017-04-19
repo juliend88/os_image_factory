@@ -22,10 +22,14 @@ glance --insecure image-create \
        --file $IMG \
        --disk-format qcow2 \
        --container-format bare \
-       --name "$TMP_IMG_NAME"
+       --name "$TMP_IMG_NAME" \
+       --progress
 
 TMP_IMG_ID="$(openstack --insecure image list --private | grep $TMP_IMG_NAME | tr "|" " " | tr -s " " | cut -d " " -f2)"
 echo "TMP_IMG_ID for image '$TMP_IMG_NAME': $TMP_IMG_ID"
+
+
+echo "Waiting Image Create"
 
 sed "s/TMP_IMAGE_ID/$TMP_IMG_ID/" $(dirname $0)/build-vars.template.yml > $(dirname $0)/build-vars.yml
 sed -i "s/B_TARGET_NAME/$IMG_NAME/" $(dirname $0)/build-vars.yml
