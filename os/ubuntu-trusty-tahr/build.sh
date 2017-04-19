@@ -23,13 +23,20 @@ glance --insecure image-create \
        --disk-format qcow2 \
        --container-format bare \
        --name "$TMP_IMG_NAME" \
-       --progress
 
 TMP_IMG_ID="$(openstack --insecure image list --private | grep $TMP_IMG_NAME | tr "|" " " | tr -s " " | cut -d " " -f2)"
 echo "TMP_IMG_ID for image '$TMP_IMG_NAME': $TMP_IMG_ID"
 
+STATUS=$(openstack --insecure image show $TMP_IMG_NAME | grep status | awk '{print $4}')
 
-echo "Waiting Image Create"
+while [ $STATUS != active ]
+  do
+   sleep 10
+   STATUS=$(openstack --insecure image show $TMP_IMG_NAME | grep status | awk '{print $4}')
+   echo "Waiting Image Create"
+done
+
+
 
 sed "s/TMP_IMAGE_ID/$TMP_IMG_ID/" $(dirname $0)/build-vars.template.yml > $(dirname $0)/build-vars.yml
 sed -i "s/B_TARGET_NAME/$IMG_NAME/" $(dirname $0)/build-vars.yml
@@ -56,19 +63,19 @@ IMG_ID="$(openstack --insecure image list --private | grep $IMG_NAME | tr "|" " 
 echo "IMG_ID for image '$IMG_NAME': $IMG_ID"
 
 
-export NOSE_IMAGE_ID=$IMG_ID
+#export NOSE_IMAGE_ID=$IMG_ID
 
-export NOSE_FLAVOR=21
+#export NOSE_FLAVOR=21
 
-export NOSE_NET_ID=$FACTORY_NETWORK_ID
+#export NOSE_NET_ID=$FACTORY_NETWORK_ID
 
-export NOSE_SG_ID=$FACTORY_SECURITY_GROUP_ID
+#export NOSE_SG_ID=$FACTORY_SECURITY_GROUP_ID
 
-pushd ../test-tools/pytesting_os/
+#pushd ../test-tools/pytesting_os/
 
-nosetests --nologcapture
+#nosetests --nologcapture
 
-popd
+#popd
 
 
 # FIXME: Actually delete images
