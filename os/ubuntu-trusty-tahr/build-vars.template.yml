@@ -3,11 +3,20 @@ bundle_target_name: B_TARGET_NAME
 packer_file: "build.packer.json"
 bundle:
   name: ubuntu-14.04
-  img_base: d9bd237a-c298-47a7-aca8-3664e3debb44
+  img_base: TMP_IMAGE_ID
   path: ubuntu-trusty-tahr
   properties:
-    cw_os: Ubuntu
-    cw_origin: Cloudwatt
-    hw_rng_model: virtio
-    cw_cat: open_source
-    cw_logo: lin-ubuntu.png
+    __account_code: ''
+    __backup_id: ''
+    __data_origin: 'file,obs-62d2:OBS_U_Ubuntu_14-04.qcow2'
+    __description: ''
+    __image_size: 265326592
+    __image_source_type: uds
+    __imagetype: gold
+    __is_config_init: true
+    __isregistered: true
+    __os_bit: 64
+    __os_type: Linux
+    __os_version: Ubuntu 14.04 server 64bit
+    __platform: Ubuntu
+   __productcode: ''

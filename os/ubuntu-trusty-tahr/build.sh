@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 BASENAME="ubuntu-14.04"
 BUILDMARK="$(date +%Y-%m-%d-%H%M)"
@@ -36,7 +36,7 @@ while [ "$STATUS" != "active" ]
    echo "Waiting Image Create"
 done
 
-
+   echo "Image tmp is uploaded"
 
 sed "s/TMP_IMAGE_ID/$TMP_IMG_ID/" $(dirname $0)/build-vars.template.yml > $(dirname $0)/build-vars.yml
 sed -i "s/B_TARGET_NAME/$IMG_NAME/" $(dirname $0)/build-vars.yml
