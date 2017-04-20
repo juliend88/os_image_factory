@@ -19,4 +19,4 @@ bundle:
     __os_type: Linux
     __os_version: Ubuntu 14.04 server 64bit
     __platform: Ubuntu
-   __productcode: ''
+    __productcode: ''
