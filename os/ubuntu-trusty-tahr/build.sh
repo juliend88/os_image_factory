@@ -27,12 +27,12 @@ glance --insecure image-create \
 TMP_IMG_ID="$(openstack --insecure image list --private | grep $TMP_IMG_NAME | tr "|" " " | tr -s " " | cut -d " " -f2)"
 echo "TMP_IMG_ID for image '$TMP_IMG_NAME': $TMP_IMG_ID"
 
-STATUS=$(openstack --insecure image show $TMP_IMG_NAME | grep status | awk '{print $4}')
+STATUS=queued
 
 while [ "$STATUS" != "active" ]
   do
    sleep 10
-   STATUS=$(openstack --insecure image show $TMP_IMG_NAME | grep status | awk '{print $4}')
+   STATUS=$(openstack --insecure image show $TMP_IMG_ID | grep status | awk '{print $4}')
    echo "Waiting Image Create"
 done
 
