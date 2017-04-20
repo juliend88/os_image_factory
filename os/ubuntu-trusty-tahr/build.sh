@@ -49,8 +49,8 @@ cd ..
 
 BUILD_SUCCESS="$?"
 
-echo "======= Deleting temporary image..."
-glance --insecure image-delete $TMP_IMG_ID
+#echo "======= Deleting temporary image..."
+#glance --insecure image-delete $TMP_IMG_ID
 
 if [ ! "$BUILD_SUCCESS" ]; then
   echo "Build failed! Check packer log for details."
