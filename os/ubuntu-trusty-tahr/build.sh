@@ -29,7 +29,7 @@ echo "TMP_IMG_ID for image '$TMP_IMG_NAME': $TMP_IMG_ID"
 
 STATUS=$(openstack --insecure image show $TMP_IMG_NAME | grep status | awk '{print $4}')
 
-while [ $STATUS != active ]
+while [ "$STATUS" != "active" ]
   do
    sleep 10
    STATUS=$(openstack --insecure image show $TMP_IMG_NAME | grep status | awk '{print $4}')
